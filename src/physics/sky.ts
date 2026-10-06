@@ -61,6 +61,8 @@ export interface TraceOptions {
   sunSteps?: number;
   /** Stop the ray at this distance (a terrain hit), km. */
   tMax?: number;
+  /** Ignore the planet sphere (terrain rays: the terrain model replaces the ground). */
+  ignoreGround?: boolean;
 }
 
 export interface TraceResult {
@@ -122,7 +124,12 @@ export function sunTransmittance(
 }
 
 /** Ray–sphere intersection parameters for the observer at radius r0 = R + h, zenith cosine μ. */
-export function rayExtent(atm: SpectralAtmosphere, altitude: number, mu: number) {
+export function rayExtent(
+  atm: SpectralAtmosphere,
+  altitude: number,
+  mu: number,
+  ignoreGround = false,
+) {
   const R = atm.bottomRadius;
   const Ht = atm.topRadius - R;
   const h = Math.max(0, altitude);
@@ -143,8 +150,9 @@ export function rayExtent(atm: SpectralAtmosphere, altitude: number, mu: number)
   let t1 = t1Top;
   let hitGround = false;
   const discG = b * b - cGround;
-  if (discG >= 0) {
-    const tg = -b - Math.sqrt(discG);
+  if (discG >= 0 && !ignoreGround && b < 0) {
+    // Smaller root in the cancellation-free form c / (−b + √disc) (matters in fp32 on the GPU).
+    const tg = cGround / (-b + Math.sqrt(discG));
     if (tg > 0 && tg < t1) {
       t1 = tg;
       hitGround = true;
@@ -167,7 +175,7 @@ export function traceRay(scene: Scene, dir: Vec3, opts: TraceOptions): TraceResu
     endMuS: scene.sunDir[1],
   };
   const mu0 = dir[1];
-  const ext = rayExtent(atm, scene.altitude, mu0);
+  const ext = rayExtent(atm, scene.altitude, mu0, opts.ignoreGround ?? false);
   if (ext.missed) {
     res.missed = true;
     return res;
@@ -243,18 +251,27 @@ export function traceRay(scene: Scene, dir: Vec3, opts: TraceOptions): TraceResu
   return res;
 }
 
-/** Diffuse sky irradiance (per λ) on horizontal ground for sun zenith cosine μs (interpolated). */
+/** Sun zenith cosine of irradiance-table row m: μs = −0.25 + 1.25 (m / (M − 1))². */
+export function irradianceMu(m: number, rows: number): number {
+  const u = m / (rows - 1);
+  return -0.25 + 1.25 * u * u;
+}
+
+/**
+ * Diffuse sky irradiance (per λ) on horizontal ground for sun zenith cosine μs, interpolated
+ * linearly in the table coordinate u = √((μs + 0.25) / 1.25), as GL_LINEAR does on the GPU.
+ */
 export function skyIrradianceAt(
   table: IrradianceTable | null,
   muS: number,
   out: Float64Array,
 ): Float64Array {
   if (!table) return out.fill(0);
-  const m = table.muS;
-  const x = Math.min(m[m.length - 1], Math.max(m[0], muS));
-  let j = 0;
-  while (j < m.length - 2 && m[j + 1] < x) j++;
-  const t = (x - m[j]) / (m[j + 1] - m[j]);
+  const rows = table.muS.length;
+  const u = Math.sqrt(Math.min(1, Math.max(0, (muS + 0.25) / 1.25)));
+  const x = u * (rows - 1);
+  const j = Math.min(rows - 2, Math.floor(x));
+  const t = x - j;
   for (let i = 0; i < table.n; i++) {
     out[i] = table.values[j * table.n + i] * (1 - t) + table.values[(j + 1) * table.n + i] * t;
   }
@@ -328,8 +345,7 @@ export function buildIrradianceTable(
   const values = new Float64Array(samples * n);
   for (let m = 0; m < samples; m++) {
     // Denser sampling near the horizon, where skylight changes fastest.
-    const u = m / (samples - 1);
-    muS[m] = -0.25 + 1.25 * u * u;
+    muS[m] = irradianceMu(m, samples);
     const sunDir: Vec3 = [Math.sqrt(Math.max(0, 1 - muS[m] * muS[m])), muS[m], 0];
     const scene: Scene = { atm, lut, irradiance: null, altitude: 0.002, sunDir };
     for (let zb = 0; zb < zenithBands; zb++) {

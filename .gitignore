@@ -7,3 +7,6 @@ blob-report/
 *.log
 .DS_Store
 .vite/
+
+# dev-only look-development helpers
+tests/_*

@@ -39,7 +39,7 @@ export interface AerosolPreset {
  * stratosphere (τ ≈ 0.1–0.15, r_eff ≈ 0.5 µm, non-absorbing sulfate; Russell et al. 1996).
  */
 const CLEAN_TROPOSPHERE: AerosolLayer = {
-  tau550: 0.06,
+  tau550: 0.04,
   angstrom: 1.2,
   ssa440: 0.97,
   ssa670: 0.96,
@@ -52,7 +52,7 @@ export const AEROSOL_PRESETS: Record<AerosolPresetId, AerosolPreset> = {
   clean: {
     id: 'clean',
     label: 'Clean air',
-    blurb: 'Background continental aerosol, τ₅₅₀ = 0.06.',
+    blurb: 'Clean continental air, as after rain or at a high site, τ₅₅₀ = 0.04.',
     troposphere: CLEAN_TROPOSPHERE,
     stratosphere: null,
   },

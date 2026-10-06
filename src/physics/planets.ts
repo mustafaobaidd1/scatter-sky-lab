@@ -41,8 +41,9 @@ export const EARTH: Planet = {
   molecularCrossSection: (l) => airCrossSection(l),
   sunDistanceAu: 1,
   ozoneDU: 300,
-  // Dry grass and soil: dark, slightly rising toward red.
-  groundAlbedo: (l) => 0.06 + 0.08 * Math.min(1, Math.max(0, (l - 400) / 300)),
+  // Scrub and grass: dark, with a faint green bump and the start of the vegetation red edge.
+  groundAlbedo: (l) =>
+    0.045 + 0.025 * Math.exp(-0.5 * ((l - 555) / 35) ** 2) + 0.08 * Math.max(0, (l - 690) / 60),
 };
 
 /**
