@@ -29,13 +29,16 @@ const BODHAINE_TABLE_3: [number, number, number, number][] = [
 ];
 
 describe('Rayleigh scattering of air vs Bodhaine et al. (1999) Table 3', () => {
-  it.each(BODHAINE_TABLE_3)('at %s µm: cross-section, King factor and optical depth', (um, sigma, tau, king) => {
-    const nm = um * 1000;
-    expect(airKingFactor(nm)).toBeCloseTo(king, 4);
-    // Cross-section in cm² (1 m² = 1e4 cm²); agreement to 0.1 %.
-    expect(Math.abs(airCrossSection(nm) * 1e4 - sigma) / sigma).toBeLessThan(1e-3);
-    expect(Math.abs(airOpticalDepth(nm) - tau) / tau).toBeLessThan(1e-3);
-  });
+  it.each(BODHAINE_TABLE_3)(
+    'at %s µm: cross-section, King factor and optical depth',
+    (um, sigma, tau, king) => {
+      const nm = um * 1000;
+      expect(airKingFactor(nm)).toBeCloseTo(king, 4);
+      // Cross-section in cm² (1 m² = 1e4 cm²); agreement to 0.1 %.
+      expect(Math.abs(airCrossSection(nm) * 1e4 - sigma) / sigma).toBeLessThan(1e-3);
+      expect(Math.abs(airOpticalDepth(nm) - tau) / tau).toBeLessThan(1e-3);
+    },
+  );
 
   it('reproduces the column of Eq. (30): 2.1520e25 molecules cm^-2 at sea level, 45° N', () => {
     expect(airColumn() / 1e4).toBeCloseTo(2.152e25, -21);
@@ -56,16 +59,22 @@ describe('the scattering coefficients widely used in real-time rendering', () =>
     [440, 33.1e-6],
   ] as const;
 
-  it.each(RENDERING)('are reproduced at %i nm by n = 1.0003, N = 2.546e25, ρ = 0.035', (nm, beta) => {
-    expect(Math.abs(renderingRayleighBeta(nm) - beta) / beta).toBeLessThan(2e-3);
-  });
+  it.each(RENDERING)(
+    'are reproduced at %i nm by n = 1.0003, N = 2.546e25, ρ = 0.035',
+    (nm, beta) => {
+      expect(Math.abs(renderingRayleighBeta(nm) - beta) / beta).toBeLessThan(2e-3);
+    },
+  );
 
-  it.each(RENDERING)('are 15–20 %% above the first-principles sea-level value at %i nm', (nm, beta) => {
-    const physical = airCrossSection(nm) * STANDARD_AIR_NUMBER_DENSITY; // 288.15 K, 1013.25 hPa
-    const ratio = beta / physical;
-    expect(ratio).toBeGreaterThan(1.14);
-    expect(ratio).toBeLessThan(1.21);
-  });
+  it.each(RENDERING)(
+    'are 15–20 %% above the first-principles sea-level value at %i nm',
+    (nm, beta) => {
+      const physical = airCrossSection(nm) * STANDARD_AIR_NUMBER_DENSITY; // 288.15 K, 1013.25 hPa
+      const ratio = beta / physical;
+      expect(ratio).toBeGreaterThan(1.14);
+      expect(ratio).toBeLessThan(1.21);
+    },
+  );
 });
 
 describe('CO2 (Mars) Rayleigh cross-section', () => {

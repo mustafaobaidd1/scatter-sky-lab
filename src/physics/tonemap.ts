@@ -13,7 +13,9 @@ import { srgbEncode } from './colour';
 
 // Matrices are written column by column exactly as in the GLSL `mat3(col0, col1, col2)`.
 const SRGB_TO_REC2020 = [0.6274, 0.0691, 0.0164, 0.3293, 0.9195, 0.088, 0.0433, 0.0113, 0.8956];
-const REC2020_TO_SRGB = [1.6605, -0.1246, -0.0182, -0.5876, 1.1329, -0.1006, -0.0728, -0.0083, 1.1187];
+const REC2020_TO_SRGB = [
+  1.6605, -0.1246, -0.0182, -0.5876, 1.1329, -0.1006, -0.0728, -0.0083, 1.1187,
+];
 const AGX_INSET = [
   0.856627153315983, 0.137318972929847, 0.11189821299995, 0.0951212405381588, 0.761241990602591,
   0.0767994186031903, 0.0482516061458583, 0.101439036467562, 0.811302368396859,
@@ -37,7 +39,15 @@ function mulCols(m: number[], v: Vec3): Vec3 {
 function contrast(x: number): number {
   const x2 = x * x;
   const x4 = x2 * x2;
-  return 15.5 * x4 * x2 - 40.14 * x4 * x + 31.96 * x4 - 6.868 * x2 * x + 0.4298 * x2 + 0.1191 * x - 0.00232;
+  return (
+    15.5 * x4 * x2 -
+    40.14 * x4 * x +
+    31.96 * x4 -
+    6.868 * x2 * x +
+    0.4298 * x2 +
+    0.1191 * x -
+    0.00232
+  );
 }
 
 export function agx(rgb: Vec3): Vec3 {
@@ -50,9 +60,17 @@ export function agx(rgb: Vec3): Vec3 {
   };
   c = [enc(c[0]), enc(c[1]), enc(c[2])];
   c = mulCols(AGX_OUTSET, c);
-  c = [Math.pow(Math.max(0, c[0]), 2.2), Math.pow(Math.max(0, c[1]), 2.2), Math.pow(Math.max(0, c[2]), 2.2)];
+  c = [
+    Math.pow(Math.max(0, c[0]), 2.2),
+    Math.pow(Math.max(0, c[1]), 2.2),
+    Math.pow(Math.max(0, c[2]), 2.2),
+  ];
   c = mulCols(REC2020_TO_SRGB, c);
-  return [Math.min(1, Math.max(0, c[0])), Math.min(1, Math.max(0, c[1])), Math.min(1, Math.max(0, c[2]))];
+  return [
+    Math.min(1, Math.max(0, c[0])),
+    Math.min(1, Math.max(0, c[1])),
+    Math.min(1, Math.max(0, c[2])),
+  ];
 }
 
 /** Linear sRGB (scene units, e.g. cd/m²) → encoded display sRGB after exposure and AgX. */

@@ -30,7 +30,8 @@ export function sampleTable(table: readonly number[], lambda: number): number {
 
 /** `count` evenly spaced wavelengths from `min` to `max` inclusive, nm. */
 export function wavelengthGrid(count: number, min = 380, max = 720): Float64Array {
-  if (!(count >= 2) || !Number.isInteger(count)) throw new RangeError('count must be an integer ≥ 2');
+  if (!(count >= 2) || !Number.isInteger(count))
+    throw new RangeError('count must be an integer ≥ 2');
   if (!(max > min)) throw new RangeError('max must exceed min');
   const out = new Float64Array(count);
   for (let i = 0; i < count; i++) out[i] = min + ((max - min) * i) / (count - 1);

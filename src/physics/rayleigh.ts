@@ -18,7 +18,9 @@ export function airKingFactor(lambdaNm: number, co2PartsPerVolume = 360e-6): num
   const fN2 = 1.034 + 3.17e-4 / l2;
   const fO2 = 1.096 + 1.385e-3 / l2 + 1.448e-4 / (l2 * l2);
   const cCo2 = co2PartsPerVolume * 100; // percent
-  return (78.084 * fN2 + 20.946 * fO2 + 0.934 * 1.0 + cCo2 * 1.15) / (78.084 + 20.946 + 0.934 + cCo2);
+  return (
+    (78.084 * fN2 + 20.946 * fO2 + 0.934 * 1.0 + cCo2 * 1.15) / (78.084 + 20.946 + 0.934 + cCo2)
+  );
 }
 
 /** Depolarisation ratio ρ from a King factor F = (6 + 3ρ)/(6 − 7ρ). */
@@ -31,7 +33,11 @@ export function depolarisationFromKing(f: number): number {
  *   σ = 24π³ (n² − 1)² / (λ⁴ Ns² (n² + 2)²) · F
  * with n and Ns both at 288.15 K and 1013.25 hPa (σ itself is independent of T and p).
  */
-export function crossSectionFromIndex(lambdaNm: number, refractivity: number, kingFactor: number): number {
+export function crossSectionFromIndex(
+  lambdaNm: number,
+  refractivity: number,
+  kingFactor: number,
+): number {
   const n = 1 + refractivity;
   const n2 = n * n;
   const l = lambdaNm * 1e-9;
@@ -79,7 +85,12 @@ export function gravity(latitudeDeg: number, z: number): number {
  * Column number density of air above a site, molecules m^-2 (Eq. 25 without σ):
  * P·A / (m_a·g) with g evaluated at the mass-weighted column altitude z_c = 0.73737 z + 5517.56.
  */
-export function airColumn(pressurePa = 101325, latitudeDeg = 45, siteAltitude = 0, co2 = 360e-6): number {
+export function airColumn(
+  pressurePa = 101325,
+  latitudeDeg = 45,
+  siteAltitude = 0,
+  co2 = 360e-6,
+): number {
   const zc = 0.73737 * siteAltitude + 5517.56;
   const m = airMolecularWeight(co2) / 1000 / AVOGADRO; // kg per molecule
   return pressurePa / (m * gravity(latitudeDeg, zc));
@@ -96,9 +107,16 @@ export function airOpticalDepth(lambdaNm: number, pressurePa = 101325, latitudeD
  * constant n = 1.0003, N = 2.546e25 m^-3 and ρ = 0.035. Exposed only to document where those
  * widely copied constants come from; the simulation uses the physical cross-section above.
  */
-export function renderingRayleighBeta(lambdaNm: number, n = 1.0003, N = 2.546e25, rho = 0.035): number {
+export function renderingRayleighBeta(
+  lambdaNm: number,
+  n = 1.0003,
+  N = 2.546e25,
+  rho = 0.035,
+): number {
   const l = lambdaNm * 1e-9;
-  return ((8 * Math.PI ** 3 * (n * n - 1) ** 2) / (3 * N * l ** 4)) * ((6 + 3 * rho) / (6 - 7 * rho));
+  return (
+    ((8 * Math.PI ** 3 * (n * n - 1) ** 2) / (3 * N * l ** 4)) * ((6 + 3 * rho) / (6 - 7 * rho))
+  );
 }
 
 /**

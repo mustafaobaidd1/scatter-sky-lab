@@ -148,7 +148,11 @@ export function labToLch(lab: Vec3): { L: number; C: number; h: number } {
 }
 
 /** XYZ of the D65 white point with Y = 1. */
-export const D65_XYZ: Vec3 = [D65_WHITE[0] / D65_WHITE[1], 1, (1 - D65_WHITE[0] - D65_WHITE[1]) / D65_WHITE[1]];
+export const D65_XYZ: Vec3 = [
+  D65_WHITE[0] / D65_WHITE[1],
+  1,
+  (1 - D65_WHITE[0] - D65_WHITE[1]) / D65_WHITE[1],
+];
 
 /** Chromaticity of monochromatic light at λ (nm), from the 5 nm CMF table. */
 export function spectralChromaticity(lambda: number): [number, number] {
@@ -217,7 +221,11 @@ export function dominantWavelength(
   };
   const forward = hit(dx / dist, dy / dist);
   if (forward) {
-    return { wavelength: forward.lambda, complementary: false, purity: Math.min(1, dist / forward.t) };
+    return {
+      wavelength: forward.lambda,
+      complementary: false,
+      purity: Math.min(1, dist / forward.t),
+    };
   }
   // Toward the purple line: purity is measured to the purple line, wavelength is complementary.
   const back = hit(-dx / dist, -dy / dist);
@@ -226,7 +234,8 @@ export function dominantWavelength(
   const ex = b.x - a.x;
   const ey = b.y - a.y;
   const den = (dx / dist) * ey - (dy / dist) * ex;
-  const tPurple = Math.abs(den) > 1e-14 ? ((a.x - white[0]) * ey - (a.y - white[1]) * ex) / den : dist;
+  const tPurple =
+    Math.abs(den) > 1e-14 ? ((a.x - white[0]) * ey - (a.y - white[1]) * ex) / den : dist;
   return {
     wavelength: back ? back.lambda : NaN,
     complementary: true,
