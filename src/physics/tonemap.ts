@@ -11,8 +11,10 @@ import { srgbEncode } from './colour';
  *   saturation 1.7; Wrensch's "Punchy" preset is 1.35 and 1.4): base AgX greys mid-tone blues,
  *   and this keeps a noon sky blue and the Martian aureole visibly blue. Log-space sigmoid with a
  *   toe and a shoulder; very bright colours roll off toward white like film.
- * 'neutral' — Khronos PBR Neutral (Apache-2.0): leaves colours below 0.76 untouched, so mid-tone
- *   chromaticities are reproduced exactly, and compresses highlights toward white.
+ * 'neutral' — Khronos PBR Neutral (Apache-2.0): below its compression threshold (0.76) it only
+ *   subtracts a small offset (0.04, meant to cancel a surface's Fresnel reflection; less in the
+ *   shadows), so mid-tones pass almost linearly and keep their hue; highlights are compressed toward
+ *   white.
  */
 export type ToneMap = 'filmic' | 'neutral';
 

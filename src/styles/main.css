@@ -1,7 +1,7 @@
 /*
  * Scatter — the sky is the interface. Chrome is ink and paper on frosted glass whose own
- * background (ink at 74 %) keeps text above 4.5:1 even over a white sky (worst case: paper text
- * on #545555 → 7.0:1; secondary text at 80 % paper → 5.4:1).
+ * background (ink at 74 %) keeps text above 4.5:1 even over a white sky. Worst case, the glass over
+ * white is #4E5154: paper text 7.3:1, secondary text (80 % paper) 5.4:1, small labels (76 %) 5.0:1.
  */
 @import '@fontsource-variable/fraunces/opsz.css';
 @import '@fontsource-variable/fraunces/opsz-italic.css';
@@ -11,7 +11,7 @@
   --ink: #101418;
   --paper: #f6f4ef;
   --paper-2: rgba(246, 244, 239, 0.8);
-  --paper-3: rgba(246, 244, 239, 0.62);
+  --paper-3: rgba(246, 244, 239, 0.76);
   --hair: rgba(246, 244, 239, 0.14);
   --hair-strong: rgba(246, 244, 239, 0.28);
   --glass: rgba(16, 20, 24, 0.74);

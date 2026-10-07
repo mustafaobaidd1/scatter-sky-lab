@@ -46,7 +46,7 @@ export function mountView(host: HTMLElement, store: Store, view: SkyView): ViewP
     <div class="section">
       <label class="section__title" for="altitude"><span>Observer altitude</span><output id="altitude-value" for="altitude"></output></label>
       <input class="range" id="altitude" type="range" min="0" max="1000" step="1" />
-      <div class="range-scale" aria-hidden="true"><span>2 m</span><span>1 km</span><span>100 km</span></div>
+      <div class="range-scale" aria-hidden="true"><span>2 m</span><span>1 km</span><span>400 km</span></div>
       <div class="chips" role="group" aria-label="Altitude presets">
         ${PRESETS.map(([label], i) => `<button class="chip" type="button" data-alt="${i}">${label}</button>`).join('')}
       </div>
@@ -167,7 +167,7 @@ export function mountView(host: HTMLElement, store: Store, view: SkyView): ViewP
     $<HTMLElement>('#tonemap-note').textContent =
       s.toneMap === 'filmic'
         ? 'AgX: a film-like curve that rolls bright colours off toward white, with a look tuned for skies.'
-        : 'Khronos PBR Neutral: mid-tone colours are shown exactly; only highlights are compressed.';
+        : 'Khronos PBR Neutral: mid-tones pass almost linearly and keep their hue; only highlights are compressed.';
   };
   store.subscribe(() => refresh());
   refresh();

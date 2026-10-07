@@ -68,7 +68,8 @@ export function renderHowItWorks(dialog: HTMLDialogElement, _view: SkyView): voi
       distribution (${inl(String.raw`r_{\mathrm{eff}}=1.5\ \mu\mathrm m,\ v_{\mathrm{eff}}=0.3`)}) with the refractive
       index of Wolff et al. (2009). The dust absorbs blue (${inl(String.raw`\omega_{440}=`)} ${v.dust.ssa440},
       ${inl(String.raw`\omega_{670}=`)} ${v.dust.ssa670}), but its diffraction peak is narrower and stronger in blue: 3° from
-      the Sun, 440 nm light is scattered ${v.dust.forwardPeakRatio3deg}× more than 670 nm. That is the blue sunset.</p>
+      the Sun its phase function is ${v.dust.forwardPeakRatio3deg}× higher at 440 nm than at 670 nm, which near the Sun
+      outweighs the absorption. That is the blue sunset.</p>
 
       <h3>4 · Ozone</h3>
       <p>300 Dobson units in a layer peaking at 25 km absorb with the cross-sections of Serdyuchenko et al. (2014,
@@ -94,7 +95,7 @@ export function renderHowItWorks(dialog: HTMLDialogElement, _view: SkyView): voi
       sample. XYZ (with Y in cd/m²) goes to linear sRGB (D65), is scaled by an exposure from a sky-weighted light
       meter (key after Krawczyk et al. 2005, so bright skies look bright and twilight stays dim), and passes
       through AgX, a filmic curve, with a look tuned for skies (more saturation, less contrast than its
-      "Punchy" preset) before sRGB encoding. The Neutral option instead shows mid-tone colours exactly. 16 samples reproduce the 5 nm reference to
+      "Punchy" preset) before sRGB encoding. The Neutral option (Khronos PBR Neutral) instead passes mid-tones almost linearly, keeping their hue, and compresses only the highlights. 16 samples reproduce the 5 nm reference to
       ΔE*ab ≤ ${Math.max(...v.sampling.map((s) => s.deltaE))}.</p>
 
       <h3>8 · What is approximated</h3>
