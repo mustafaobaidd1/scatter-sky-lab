@@ -87,7 +87,7 @@ export const STEPS: Step[] = [
     }),
     extra: 'violet',
     body: (c) =>
-      `<p>Violet is scattered even more than blue, and the spectrum of the zenith peaks toward it. But sunlight holds less violet and our eyes barely respond below 430 nm. The eye sums every wavelength: dominant wavelength <strong>${zenithDominant(c)}</strong>, a pale blue.</p>`,
+      `<p>Air scatters violet even more than blue, but sunlight carries much less violet, so the sky's spectrum peaks in the blue, and our eyes barely respond below 430 nm. Summing every wavelength, the eye sees a pale blue: dominant wavelength <strong>${zenithDominant(c)}</strong>.</p>`,
   },
   {
     title: 'Sunset: the long way through',
@@ -192,8 +192,8 @@ export function mountStory(
         <button class="btn" type="button" data-prev ${index === 0 ? 'disabled' : ''}>${icons.back}Back</button>
         ${
           index < STEPS.length - 1
-            ? `<button class="btn btn--primary" type="button" data-next>Next${icons.next}</button>`
-            : `<button class="btn btn--primary" type="button" data-exit>Keep exploring</button>`
+            ? `<button class="btn btn--primary" type="button" data-next data-primary>Next${icons.next}</button>`
+            : `<button class="btn btn--primary" type="button" data-exit data-primary>Keep exploring</button>`
         }
       </div>`;
     host
@@ -228,12 +228,7 @@ export function mountStory(
     render(); // lay out the card first: the camera frames the horizon above it on narrow screens
     const target = STEPS[index].target(ctx);
     store.animateTo(target, prefersReducedMotion() ? 0 : 1400, () => refreshText());
-    (
-      host.querySelector<HTMLElement>('[data-next]') ??
-      host.querySelector<HTMLElement>('[data-exit]')
-    )?.focus({
-      preventScroll: true,
-    });
+    host.querySelector<HTMLElement>('[data-primary]')?.focus({ preventScroll: true });
   };
 
   const close = () => {

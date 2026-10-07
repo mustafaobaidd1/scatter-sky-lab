@@ -55,7 +55,7 @@ export function renderWhyViolet(host: HTMLElement, view: SkyView): void {
         <dt>Purity</dt><dd>${dom ? fmt(dom.purity * 100, 0) + ' %' : '—'}</dd>
       </dl>
     </div>
-    <p class="note">The scattered spectrum rises toward violet, but sunlight holds less violet and the eye is barely sensitive below 430 nm. Every wavelength contributes, so the mixture is a <strong>pale blue</strong>, not violet.</p>`;
+    <p class="note">Air scatters violet most strongly, but sunlight carries much less violet than blue, so this sky's spectrum peaks near ${Math.round(peak)} nm, and the eye is barely sensitive below 430 nm. Every wavelength contributes, so the mixture looks <strong>pale blue</strong>, not violet.</p>`;
 }
 
 function argmax(xs: ArrayLike<number>, ys: ArrayLike<number>): number {

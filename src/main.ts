@@ -274,6 +274,7 @@ Object.assign(window, {
     set: (patch: Parameters<Store['set']>[0]) => store.set(patch),
     renderNow: () => view.renderNow(),
     readPixel: (u: number, v: number) => view.readPixel(u, v),
+    compareWithCpu: (u: number, v: number) => view.compareWithCpu(u, v),
     screenOf: (elevation: number, azimuth: number) =>
       view.screenOf(dirFromAngles(elevation, azimuth)),
     probe: (elevation: number, azimuth: number) => {

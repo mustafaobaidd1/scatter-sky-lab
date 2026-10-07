@@ -26,8 +26,18 @@ export const METER_FLOOR = 0.002;
 /** Scales Krawczyk's key (designed for Reinhard's curve) to the AgX curve used here. */
 export const KEY_SCALE = 0.7;
 
-/** Weights of the meter by what a direction sees. */
-const METER_WEIGHT = { sky: 1, sun: 1, terrain: 0.15, ground: 0.15, space: 0.05 } as const;
+/**
+ * Weights of the meter by what a direction sees. Black space is ignored; from high altitude the
+ * planet's ground and limb are the subject (the thin air above is almost black), so above 20 km
+ * the ground weighs fully and the sky little.
+ */
+function meterWeight(kind: string, altitude: number): number {
+  const high = altitude > 20;
+  if (kind === 'space') return 0;
+  if (kind === 'ground') return high ? 1 : 0.15;
+  if (kind === 'terrain') return 0.15;
+  return high ? 0.1 : 1;
+}
 
 export function keyFor(luminance: number): number {
   return KEY_SCALE * (1.03 - 2 / (2 + Math.log10(luminance + 1)));
@@ -53,12 +63,12 @@ export function meterView(
       });
       const l = res.radiance.map((v, k) => v - res.sun[k]);
       const Y = radianceToXyz(l, w)[1];
-      const wt = METER_WEIGHT[res.kind];
+      const wt = meterWeight(res.kind, scene.altitude);
       sumLog += wt * Math.log(Math.max(Y, 0) + METER_FLOOR);
       total += wt;
     }
   }
-  const meteredLuminance = Math.exp(sumLog / total);
+  const meteredLuminance = total > 0 ? Math.exp(sumLog / total) : METER_FLOOR;
   const key = keyFor(meteredLuminance);
   return {
     exposure: (key / meteredLuminance) * Math.pow(2, compensationEv),

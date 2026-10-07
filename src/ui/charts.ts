@@ -40,7 +40,7 @@ export function spectrumChart(o: ChartOptions): string {
   const H = o.height ?? 156;
   const left = 38;
   const right = W - 8;
-  const top = 10;
+  const top = o.yLabel ? 22 : 10;
   const bottom = H - 26;
   const lmin = 380;
   const lmax = 720;
@@ -93,7 +93,7 @@ export function spectrumChart(o: ChartOptions): string {
     }
   }
   if (o.yLabel) {
-    parts.push(`<text x="${left - 30}" y="${top - 1}" text-anchor="start">${o.yLabel}</text>`);
+    parts.push(`<text x="0" y="10" text-anchor="start">${o.yLabel}</text>`);
   }
   const tid = `chart-t-${gradientId}`;
   const did = `chart-d-${gradientId}`;

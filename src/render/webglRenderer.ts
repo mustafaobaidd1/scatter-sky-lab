@@ -79,6 +79,8 @@ export class WebGLSkyRenderer {
   private atmosphere: GpuAtmosphere | null = null;
   private atmosphereDirty = true;
   status: RendererStatus = 'compiling';
+  /** True for software rasterisers (SwiftShader, llvmpipe), which need a lower resolution. */
+  readonly software: boolean;
   /** Size of the last rendered image in pixels. */
   lastRenderSize: [number, number] = [0, 0];
 
@@ -88,6 +90,11 @@ export class WebGLSkyRenderer {
     private readonly onStatus: (status: RendererStatus, detail?: string) => void,
   ) {
     this.gl = gl;
+    const info = gl.getExtension('WEBGL_debug_renderer_info');
+    const name = String(
+      info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
+    );
+    this.software = /swiftshader|llvmpipe|software|softpipe/i.test(name);
     canvas.addEventListener('webglcontextlost', this.handleLost, false);
     canvas.addEventListener('webglcontextrestored', this.handleRestored, false);
   }
@@ -303,6 +310,13 @@ export class WebGLSkyRenderer {
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     this.lastRenderSize = [w, h];
     return true;
+  }
+
+  /** Blocks until the GPU has finished the last frame (one pixel read); returns the wait in ms. */
+  sync(): number {
+    const t0 = performance.now();
+    this.readPixel(0.5, 0.5);
+    return performance.now() - t0;
   }
 
   /** Reads an RGB pixel of the last rendered image at a position in [0, 1]² (y down). */

@@ -78,7 +78,7 @@ export function buildLayout(root: HTMLElement): Layout {
     <section class="story glass" id="story" aria-labelledby="story-title" hidden></section>
 
     <div class="scrubber glass" id="scrubber"></div>
-    <div class="status" id="status" aria-hidden="true"></div>
+    <div class="status glass" id="status" aria-hidden="true"></div>
     <div class="banner glass" id="banner" role="status" hidden></div>
     <div class="loader glass" id="loader" role="status" aria-live="polite">
       <p id="loader-text">Preparing the sky…</p>

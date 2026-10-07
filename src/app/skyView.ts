@@ -9,7 +9,7 @@ import { lookupColumns, type ColumnLut } from '../physics/lut';
 import type { DustOptics } from '../physics/marsDust';
 import { dirFromAngles, type IrradianceTable, type Scene, type Vec3 } from '../physics/sky';
 import { interpolateSamples } from '../physics/spectral';
-import { cameraBasis, project, rayThrough, type CameraBasis } from '../render/camera';
+import { cameraBasis, pixelRay, project, rayThrough, type CameraBasis } from '../render/camera';
 import { radianceToDisplay } from '../render/cpuRender';
 import { meterView, type ExposureResult } from '../render/exposure';
 import { packAtmosphere } from '../render/gpuData';
@@ -93,6 +93,9 @@ export class SkyView {
   private wantFinal = false;
   private interactiveUntil = 0;
   private scale = 0.75;
+  /** Resolution of settled frames: 1 unless the GPU proves slow (auto quality). */
+  private finalScale = 1;
+  private finalMeasured = false;
   private lastFrameTime = 0;
   private exposure: ExposureResult | null = null;
   private exposureDirtyAt = 0;
@@ -136,7 +139,13 @@ export class SkyView {
       }
     } else reason = 'forced by ?renderer=cpu';
     if (!this.renderer) this.useCpu(reason);
-    else o.onRenderer('webgl', null);
+    else {
+      o.onRenderer('webgl', null);
+      if (this.renderer.software) {
+        this.finalScale = 0.35;
+        this.scale = 0.3;
+      }
+    }
     this.resize();
     await tables;
     if (this.bundle)
@@ -321,7 +330,8 @@ export class SkyView {
         if (dt > 26) this.scale = Math.max(0.3, this.scale * 0.85);
         else if (dt < 15) this.scale = Math.min(1, this.scale * 1.06);
       }
-      const scale = this.opts.fixedScale ?? (final ? 1 : this.scale);
+      const scale =
+        this.opts.fixedScale ?? (final ? this.finalScale : Math.min(this.scale, this.finalScale));
       const ok = this.renderer.render({
         basis: cameraBasis(
           { yaw: s.yaw, pitch: s.pitch, fov: s.fov },
@@ -340,7 +350,22 @@ export class SkyView {
       });
       if (!ok) return;
       this.lastFrameTime = interactive ? now : 0;
-      if (final) this.wantFinal = false;
+      if (final) {
+        this.wantFinal = false;
+        // Auto quality: time the first settled frame; a slow GPU gets a lower settled resolution.
+        if (!this.finalMeasured && !this.opts.fixedScale) {
+          this.finalMeasured = true;
+          const ms = this.renderer.sync();
+          if (ms > 120) {
+            this.finalScale = Math.max(
+              0.3,
+              Math.min(this.finalScale, this.finalScale * Math.sqrt(90 / ms)),
+            );
+            this.scale = Math.min(this.scale, this.finalScale);
+            this.requestFinal();
+          }
+        }
+      }
       this.afterFrame(basis, scale);
     } else if (this.kind === 'cpu') {
       this.renderCpu(final, basis);
@@ -369,8 +394,9 @@ export class SkyView {
       return;
     }
     const s = this.opts.store.get();
-    const target = final ? 4.5 : 9; // CSS pixels per rendered pixel
-    const w = Math.max(48, Math.min(360, Math.round(this.cssSize[0] / target)));
+    // One resolution for every CPU frame (resizing a canvas clears it); interactive frames use
+    // fewer integration steps instead.
+    const w = Math.max(48, Math.min(280, Math.round(this.cssSize[0] / 5.5)));
     const h = Math.max(32, Math.round((w * this.cssSize[1]) / this.cssSize[0]));
     const canvas = this.opts.cpuCanvas;
     if (canvas.width !== w || canvas.height !== h) {
@@ -441,6 +467,33 @@ export class SkyView {
       1,
     ).data;
     return [d[0], d[1], d[2]];
+  }
+
+  /**
+   * For tests: the GPU pixel at (u, v) of the last frame and the CPU reference colour of the same
+   * render-target pixel (same ray, exposure and tone map). WebGL only.
+   */
+  compareWithCpu(u: number, v: number): { gpu: number[]; cpu: number[] } | null {
+    if (this.kind !== 'webgl' || !this.renderer || !this.bundle || !this.exposure) return null;
+    const gpu = this.renderer.readPixel(u, v);
+    const scene = this.scene();
+    if (!gpu || !scene) return null;
+    const [w, h] = this.renderer.lastRenderSize;
+    const s = this.opts.store.get();
+    const basis = cameraBasis({ yaw: s.yaw, pitch: s.pitch, fov: s.fov }, w, h);
+    const px = Math.min(w - 1, Math.max(0, Math.floor(u * w)));
+    const py = Math.min(h - 1, Math.max(0, Math.floor(v * h)));
+    const res = shadeDirection(scene, pixelRay(basis, px, py, w, h), {
+      steps: FINAL_STEPS,
+      pixelAngle: (2 * basis.tanY) / h,
+    });
+    const c = radianceToDisplay(
+      res.radiance,
+      cmfWeights(RENDER_GRID),
+      this.exposure.exposure,
+      s.toneMap,
+    );
+    return { gpu, cpu: c.map((x) => Math.round(x * 255)) };
   }
 
   /** Screen position (CSS px) of a world direction. */

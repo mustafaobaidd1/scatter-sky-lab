@@ -79,7 +79,7 @@ export function mountProbe(
     const unitLabel = unit === 1 ? 'W m⁻² sr⁻¹ nm⁻¹' : 'mW m⁻² sr⁻¹ nm⁻¹';
     const scaled = r.radiance.map((v) => v * unit);
     const ticks = niceTicks(max * unit, 3);
-    const top = ticks[ticks.length - 1] || 1;
+    const top = Math.max(max * unit * 1.06, ticks[ticks.length - 1] || 1e-9);
     const dom = r.stats.dominant;
     const domText = !dom
       ? '—'

@@ -413,7 +413,7 @@ a {
   top: calc(var(--gap) + 66px);
   right: var(--gap);
   width: 372px;
-  max-height: calc(100vh - var(--gap) * 2 - 66px - 96px);
+  max-height: calc(100vh - var(--gap) * 2 - 66px - 124px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -914,8 +914,8 @@ a {
 
 .share-legend {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px 12px;
+  grid-template-columns: 1fr;
+  gap: 1px;
   margin: 0 0 6px;
   font-size: 12.5px;
 }
@@ -1151,11 +1151,12 @@ a {
   right: var(--gap);
   bottom: calc(var(--gap) + var(--safe-b));
   max-width: 260px;
-  padding: 6px 12px;
+  padding: 5px 12px;
   border-radius: 999px;
   font-size: 11.5px;
   color: var(--paper-2);
   font-variant-numeric: tabular-nums;
+  box-shadow: none;
 }
 
 .banner {
