@@ -95,7 +95,7 @@ export class SkyView {
   private scale = 0.75;
   /** Resolution of settled frames: 1 unless the GPU proves slow (auto quality). */
   private finalScale = 1;
-  private finalMeasured = false;
+  private finalMeasured = 0;
   private lastFrameTime = 0;
   private exposure: ExposureResult | null = null;
   private exposureDirtyAt = 0;
@@ -352,14 +352,15 @@ export class SkyView {
       this.lastFrameTime = interactive ? now : 0;
       if (final) {
         this.wantFinal = false;
-        // Auto quality: time the first settled frame; a slow GPU gets a lower settled resolution.
-        if (!this.finalMeasured && !this.opts.fixedScale) {
-          this.finalMeasured = true;
+        // Auto quality: time the second settled frame (the first includes one-off driver work
+        // such as lazy shader translation); a slow GPU gets a lower settled resolution.
+        if (this.finalMeasured < 2 && !this.opts.fixedScale) {
+          this.finalMeasured++;
           const ms = this.renderer.sync();
-          if (ms > 120) {
+          if (this.finalMeasured === 2 && ms > 220) {
             this.finalScale = Math.max(
               0.3,
-              Math.min(this.finalScale, this.finalScale * Math.sqrt(90 / ms)),
+              Math.min(this.finalScale, this.finalScale * Math.sqrt(150 / ms)),
             );
             this.scale = Math.min(this.scale, this.finalScale);
             this.requestFinal();

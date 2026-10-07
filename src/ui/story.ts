@@ -51,6 +51,14 @@ function zenithDominant(c: Ctx): string {
   return d && !d.complementary ? `${Math.round(d.wavelength)} nm` : 'close to white';
 }
 
+function zenithPeak(c: Ctx): string {
+  const p = c.view.probe([0, 1, 0]);
+  if (!p) return 'about 450 nm';
+  let best = 0;
+  for (let i = 1; i < p.radiance.length; i++) if (p.radiance[i] > p.radiance[best]) best = i;
+  return `${Math.round(p.lambdas[best])} nm`;
+}
+
 function blueRedRatio(c: Ctx): string {
   const atm = c.view.atmosphere;
   if (!atm) return '5';
@@ -87,7 +95,7 @@ export const STEPS: Step[] = [
     }),
     extra: 'violet',
     body: (c) =>
-      `<p>Air scatters violet even more than blue, but sunlight carries much less violet, so the sky's spectrum peaks in the blue, and our eyes barely respond below 430 nm. Summing every wavelength, the eye sees a pale blue: dominant wavelength <strong>${zenithDominant(c)}</strong>.</p>`,
+      `<p>Air scatters violet even more than blue: right now the zenith spectrum peaks at <strong>${zenithPeak(c)}</strong>. Yet the sky looks pale blue. Sunlight holds less violet than blue to begin with, the eye barely responds below 430 nm, and it sums every wavelength: the mixture's dominant wavelength is <strong>${zenithDominant(c)}</strong>.</p>`,
   },
   {
     title: 'Sunset: the long way through',

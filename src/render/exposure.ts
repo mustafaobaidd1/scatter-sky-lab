@@ -70,9 +70,21 @@ export function meterView(
   }
   const meteredLuminance = total > 0 ? Math.exp(sumLog / total) : METER_FLOOR;
   const key = keyFor(meteredLuminance);
-  return {
-    exposure: (key / meteredLuminance) * Math.pow(2, compensationEv),
-    meteredLuminance,
-    key,
-  };
+  let exposure = (key / meteredLuminance) * Math.pow(2, compensationEv);
+
+  // Zoomed on the Sun (its disc spans more than ~1/12 of the view): expose for the disc instead,
+  // so its limb darkening and colour are visible rather than clipped to white.
+  const sunRadius = scene.atm.sunAngularRadius;
+  const halfView = Math.atan(Math.min(basis.tanX, basis.tanY));
+  const s = scene.sunDir;
+  const f = basis.forward;
+  const offAxis = Math.acos(Math.min(1, s[0] * f[0] + s[1] * f[1] + s[2] * f[2]));
+  if (sunRadius / halfView > 1 / 12 && offAxis < halfView) {
+    const disc = shadeDirection(scene, s, { steps: 16, pixelAngle: 0 });
+    if (disc.kind === 'sun') {
+      const Yd = radianceToXyz(disc.radiance, w)[1];
+      exposure = Math.min(exposure, (1.2 / Yd) * Math.pow(2, compensationEv));
+    }
+  }
+  return { exposure, meteredLuminance, key };
 }

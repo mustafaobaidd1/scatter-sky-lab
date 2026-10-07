@@ -68,6 +68,7 @@ function onStatus(s: ViewStatus) {
     }
     if (!ready) {
       ready = true;
+      ui.root.classList.add('is-ready');
       document.documentElement.dataset.ready = 'true';
       stage.update();
     }

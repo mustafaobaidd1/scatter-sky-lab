@@ -75,7 +75,7 @@ export function mountProbe(
     const fromSun = angleTo(r.direction, sun);
     let max = 0;
     for (const v of r.radiance) max = Math.max(max, v);
-    const unit = max >= 0.1 ? 1 : 1000;
+    const unit = max >= 1 ? 1 : 1000;
     const unitLabel = unit === 1 ? 'W m⁻² sr⁻¹ nm⁻¹' : 'mW m⁻² sr⁻¹ nm⁻¹';
     const scaled = r.radiance.map((v) => v * unit);
     const ticks = niceTicks(max * unit, 3);

@@ -186,6 +186,17 @@ a {
   display: none;
 }
 
+/* Until the first frame is on screen the camera is not framed yet: keep the sun controls hidden. */
+#app:not(.is-ready) .sun-handle,
+#app:not(.is-ready) .hint,
+#app:not(.is-ready) .sun-offscreen {
+  visibility: hidden;
+}
+
+.status:empty {
+  display: none;
+}
+
 .sun-pulse {
   position: absolute;
   inset: 8px;
@@ -1131,6 +1142,7 @@ a {
 }
 
 .story__extra {
+  max-width: 440px;
   margin: 4px 0 8px;
 }
 
@@ -1296,6 +1308,7 @@ a {
 }
 
 .how__body .eq {
+  -webkit-overflow-scrolling: touch;
   margin: 10px 0 12px;
   padding: 10px 14px;
   border-radius: var(--radius-s);
@@ -1487,6 +1500,14 @@ a {
 
   .banner {
     bottom: calc(var(--dock-h) + var(--safe-b) + 100px);
+  }
+
+  .how__body {
+    padding: 6px 18px 24px;
+  }
+
+  .how__body .eq .katex-display {
+    font-size: 0.86em;
   }
 }
 
