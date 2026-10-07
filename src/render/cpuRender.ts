@@ -40,8 +40,17 @@ export interface CpuFrame {
   toneMap: ToneMap;
 }
 
-/** Renders rows [y0, y1) into an RGBA8 buffer of the full frame. */
-export function renderRows(frame: CpuFrame, y0: number, y1: number, out: Uint8ClampedArray): void {
+/**
+ * Renders rows [y0, y1) into an RGBA8 buffer. `rowOffset` is the frame row stored at the start of
+ * `out` (0 when `out` holds the whole frame).
+ */
+export function renderRows(
+  frame: CpuFrame,
+  y0: number,
+  y1: number,
+  out: Uint8ClampedArray,
+  rowOffset = 0,
+): void {
   const { scene, basis, width, height, exposure, steps, toneMap: kind } = frame;
   const w = cmfWeights(scene.atm.lambdas);
   const pa = pixelAngle(basis, height);
@@ -51,7 +60,7 @@ export function renderRows(frame: CpuFrame, y0: number, y1: number, out: Uint8Cl
       const res = shadeDirection(scene, dir, { steps, pixelAngle: pa });
       const c = radianceToDisplay(res.radiance, w, exposure, kind);
       const d = (ign(x, y) - 0.5) / 255;
-      const o = (y * width + x) * 4;
+      const o = ((y - rowOffset) * width + x) * 4;
       out[o] = Math.round((c[0] + d) * 255);
       out[o + 1] = Math.round((c[1] + d) * 255);
       out[o + 2] = Math.round((c[2] + d) * 255);

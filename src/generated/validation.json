@@ -1,0 +1,250 @@
+{
+  "generated": "2026-10-07",
+  "rayleigh": [
+    {
+      "nm": 400,
+      "sigmaModel": 1.673828431563305e-26,
+      "sigmaRef": 1.6738e-26,
+      "tauModel": 0.360214,
+      "tauRef": 0.36022,
+      "kingModel": 1.05126,
+      "kingRef": 1.05126,
+      "tauDiffPercent": -0.0017
+    },
+    {
+      "nm": 440,
+      "sigmaModel": 1.1273273199428643e-26,
+      "sigmaRef": 1.1273e-26,
+      "tauModel": 0.242605,
+      "tauRef": 0.24261,
+      "kingModel": 1.0503,
+      "kingRef": 1.0503,
+      "tauDiffPercent": -0.0021
+    },
+    {
+      "nm": 550,
+      "sigmaModel": 4.5105436536153395e-27,
+      "sigmaRef": 4.5105e-27,
+      "tauModel": 0.097069,
+      "tauRef": 0.097069,
+      "kingModel": 1.04882,
+      "kingRef": 1.04882,
+      "tauDiffPercent": -0.0005
+    },
+    {
+      "nm": 680,
+      "sigmaModel": 1.90345175557796e-27,
+      "sigmaRef": 1.9035e-27,
+      "tauModel": 0.040963,
+      "tauRef": 0.040963,
+      "kingModel": 1.04802,
+      "kingRef": 1.04802,
+      "tauDiffPercent": -0.0001
+    },
+    {
+      "nm": 700,
+      "sigmaModel": 1.6925518863199056e-27,
+      "sigmaRef": 1.6926e-27,
+      "tauModel": 0.036424,
+      "tauRef": 0.036424,
+      "kingModel": 1.04793,
+      "kingRef": 1.04793,
+      "tauDiffPercent": 0.0009
+    }
+  ],
+  "renderingConstants": [
+    {
+      "nm": 680,
+      "rendering": 0.000005802,
+      "reproduced": 0.000005802,
+      "physical": 0.000004848,
+      "ratio": 1.1968
+    },
+    {
+      "nm": 550,
+      "rendering": 0.000013558,
+      "reproduced": 0.000013558,
+      "physical": 0.000011488,
+      "ratio": 1.1802
+    },
+    {
+      "nm": 440,
+      "rendering": 0.0000331,
+      "reproduced": 0.0000331,
+      "physical": 0.000028712,
+      "ratio": 1.1528
+    }
+  ],
+  "zenithTransmittanceWorstPercent": 0.0438,
+  "lutWorstRelativePercent": 1.258,
+  "lutWorstAbsoluteSmallTau": 0.00086,
+  "sampling": [
+    {
+      "name": "noon zenith",
+      "deltaE": 0.486,
+      "deltaY": 0.076
+    },
+    {
+      "name": "sunset horizon",
+      "deltaE": 0.662,
+      "deltaY": 0.365
+    },
+    {
+      "name": "smoke, 40°",
+      "deltaE": 0.067,
+      "deltaY": -0.036
+    },
+    {
+      "name": "Mars, beside the setting sun",
+      "deltaE": 1.051,
+      "deltaY": 0.456
+    }
+  ],
+  "fastPath": [
+    {
+      "name": "afternoon",
+      "deltaE": 0.036,
+      "deltaY": 0.161
+    },
+    {
+      "name": "sunset horizon",
+      "deltaE": 0.014,
+      "deltaY": -0.019
+    },
+    {
+      "name": "blue hour zenith",
+      "deltaE": 0.011,
+      "deltaY": -0.069
+    },
+    {
+      "name": "volcanic twilight",
+      "deltaE": 0.119,
+      "deltaY": -0.622
+    }
+  ],
+  "qualitative": {
+    "noonZenith": {
+      "dominant": 476.3,
+      "complementary": false,
+      "purity": 0.197,
+      "hue": 273.4,
+      "b": -25.92,
+      "luminance": 2425.9
+    },
+    "sunsetHorizon": {
+      "dominant": 586.6,
+      "complementary": false,
+      "purity": 0.872,
+      "hue": 68.1,
+      "b": 107.29,
+      "luminance": 2430.5
+    },
+    "lambda0Zenith": {
+      "dominant": 465.5,
+      "complementary": false,
+      "purity": 0.045,
+      "hue": 289.8,
+      "b": -6.56,
+      "luminance": 2439.4
+    },
+    "blueHourZenithOzone": {
+      "dominant": 475.4,
+      "complementary": false,
+      "purity": 0.243,
+      "hue": 276.1,
+      "b": -32.96,
+      "luminance": 8
+    },
+    "blueHourZenithNoOzone": {
+      "dominant": 577.6,
+      "complementary": false,
+      "purity": 0.104,
+      "hue": 84.6,
+      "b": 10.56,
+      "luminance": 16.3
+    },
+    "marsNoonZenith": {
+      "dominant": 579.9,
+      "complementary": false,
+      "purity": 0.209,
+      "hue": 76.8,
+      "b": 20.8,
+      "luminance": 2644
+    },
+    "marsBesideSettingSun": {
+      "dominant": 479.3,
+      "complementary": false,
+      "purity": 0.131,
+      "hue": 263.3,
+      "b": -15.81,
+      "luminance": 3240.6
+    },
+    "marsFarFromSettingSun": {
+      "dominant": 579.1,
+      "complementary": false,
+      "purity": 0.186,
+      "hue": 79.3,
+      "b": 18.66,
+      "luminance": 229.6
+    }
+  },
+  "mie": [
+    {
+      "case": "BH sample m=1.55, x=5.213",
+      "qscaRef": 3.10543,
+      "qsca": 3.105426,
+      "gRef": 0.63314,
+      "g": 0.633137
+    },
+    {
+      "case": "MIEV0 m=1.33+1e-5i, x=100",
+      "qscaRef": 2.096594,
+      "qsca": 2.096594,
+      "gRef": 0.868959,
+      "g": 0.868959
+    },
+    {
+      "case": "MIEV0 m=0.75, x=10",
+      "qscaRef": 2.232265,
+      "qsca": 2.232265,
+      "gRef": 0.896473,
+      "g": 0.896473
+    },
+    {
+      "case": "MIEV0 m=10+10i, x=100",
+      "qscaRef": 1.836785,
+      "qsca": 1.836785,
+      "gRef": 0.556215,
+      "g": 0.556215
+    }
+  ],
+  "dust": {
+    "ssa440": 0.7845,
+    "ssa650": 0.966,
+    "ssa650Ref": 0.975,
+    "ssa670": 0.9699,
+    "g440": 0.8096,
+    "g670": 0.7125,
+    "forwardPeakRatio3deg": 1.865
+  },
+  "d65BalancePercent": 0.0607,
+  "airMass": [
+    {
+      "elevation": 10,
+      "model": 5.54
+    },
+    {
+      "elevation": 5,
+      "model": 10.08
+    },
+    {
+      "elevation": 1.3,
+      "model": 22.3
+    },
+    {
+      "elevation": 0,
+      "model": 34.43
+    }
+  ],
+  "chapmanHorizon": 34.41
+}

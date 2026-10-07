@@ -6,9 +6,11 @@ import { srgbEncode } from './colour';
  * Output: display-referred linear sRGB in [0, 1]. The GLSL composite uses identical constants.
  *
  * 'filmic' — AgX, ported from three.js (MIT, © three.js authors; after Filament, Apache-2.0, and
- *   Troy Sobotka's AgX), with the polynomial sigmoid and the "Punchy" ASC-CDL look (power 1.35,
- *   saturation 1.4) of Benjamin Wrensch's minimal AgX (MIT, iolite-engine.com). Log-space
- *   sigmoid with a toe and a shoulder; very bright colours roll off toward white like film.
+ *   Troy Sobotka's AgX), with the polynomial sigmoid and the ASC-CDL look step of Benjamin
+ *   Wrensch's minimal AgX (MIT, iolite-engine.com). The look is tuned for skies (power 1.15,
+ *   saturation 1.7; Wrensch's "Punchy" preset is 1.35 and 1.4): base AgX greys mid-tone blues,
+ *   and this keeps a noon sky blue and the Martian aureole visibly blue. Log-space sigmoid with a
+ *   toe and a shoulder; very bright colours roll off toward white like film.
  * 'neutral' — Khronos PBR Neutral (Apache-2.0): leaves colours below 0.76 untouched, so mid-tone
  *   chromaticities are reproduced exactly, and compresses highlights toward white.
  */
@@ -30,8 +32,8 @@ const AGX_OUTSET = [
 ];
 export const AGX_MIN_EV = -12.47393;
 export const AGX_MAX_EV = 4.026069;
-export const AGX_LOOK_POWER = 1.35;
-export const AGX_LOOK_SATURATION = 1.4;
+export const AGX_LOOK_POWER = 1.15;
+export const AGX_LOOK_SATURATION = 1.7;
 
 function mulCols(m: number[], v: Vec3): Vec3 {
   return [
@@ -62,7 +64,7 @@ export function agx(rgb: Vec3): Vec3 {
   const enc = (v: number) =>
     contrast(clamp01((Math.log2(Math.max(v, 1e-10)) - AGX_MIN_EV) / (AGX_MAX_EV - AGX_MIN_EV)));
   c = [enc(c[0]), enc(c[1]), enc(c[2])];
-  // "Punchy" look (ASC CDL): power, then saturation around Rec. 709 luma.
+  // Look (ASC CDL): power, then saturation around Rec. 709 luma.
   c = [
     Math.pow(Math.max(0, c[0]), AGX_LOOK_POWER),
     Math.pow(Math.max(0, c[1]), AGX_LOOK_POWER),

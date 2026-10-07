@@ -208,31 +208,32 @@ void traceRay(
     nA = lenA > 1e-9 ? max(2, int(floor(float(steps) * lenA / total + 0.5))) : 0;
     nB = lenB > 1e-9 ? max(2, steps - nA) : 0;
   }
-  for (int seg = 0; seg < 2; seg++) {
-    int count = seg == 0 ? nA : nB;
-    float len = seg == 0 ? lenA : lenB;
-    for (int k = 0; k < 128; k++) {
-      if (k >= count) break;
-      int kk = seg == 0 ? count - 1 - k : k;
-      float u = (float(kk) + 0.5) / float(count);
-      float t = seg == 0 ? tLow - len * u * u : tLow + len * u * u;
-      float dt = len * 2.0 * u / float(count);
-      float q = cG + t * t + 2.0 * r0 * mu0 * t;
-      float qc = max(q, 0.0);
-      float r = sqrt(R * R + qc);
-      float h = qc / (r + R);
-      float muS = (os + t * nu) / r;
-      vec4 dens = densities(h);
-      vec4 Ts[NG];
-      sunTransmittance(r, qc, muS, Ts);
-      for (int i = 0; i < NG; i++) {
-        vec4 sigma = uMolSca[i] * dens.x + uAExt[i] * dens.y + uBExt[i] * dens.z + uOzone[i] * dens.w;
-        vec4 tr = exp(-sigma * dt);
-        vec4 f = mix(vec4(dt), (1.0 - tr) / max(sigma, vec4(1e-12)), step(vec4(1e-12), sigma));
-        vec4 e = uSolar[i] * Ts[i] * T[i] * f;
-        L[i] += e * (uMolSca[i] * dens.x * pR + uASca[i] * dens.y * pA[i] + uBSca[i] * dens.z * pB[i]);
-        T[i] *= tr;
-      }
+  // One loop with a dynamic bound (segment A marches toward the lowest point, segment B away
+  // from it); constant-bound loops get unrolled by some shader compilers.
+  int samples = nA + nB;
+  for (int k = 0; k < samples; k++) {
+    bool inA = k < nA;
+    int count = inA ? nA : nB;
+    float len = inA ? lenA : lenB;
+    int kk = inA ? nA - 1 - k : k - nA;
+    float u = (float(kk) + 0.5) / float(count);
+    float t = inA ? tLow - len * u * u : tLow + len * u * u;
+    float dt = len * 2.0 * u / float(count);
+    float q = cG + t * t + 2.0 * r0 * mu0 * t;
+    float qc = max(q, 0.0);
+    float r = sqrt(R * R + qc);
+    float h = qc / (r + R);
+    float muS = (os + t * nu) / r;
+    vec4 dens = densities(h);
+    vec4 Ts[NG];
+    sunTransmittance(r, qc, muS, Ts);
+    for (int i = 0; i < NG; i++) {
+      vec4 sigma = uMolSca[i] * dens.x + uAExt[i] * dens.y + uBExt[i] * dens.z + uOzone[i] * dens.w;
+      vec4 tr = exp(-sigma * dt);
+      vec4 f = mix(vec4(dt), (1.0 - tr) / max(sigma, vec4(1e-12)), step(vec4(1e-12), sigma));
+      vec4 e = uSolar[i] * Ts[i] * T[i] * f;
+      L[i] += e * (uMolSca[i] * dens.x * pR + uASca[i] * dens.y * pA[i] + uBSca[i] * dens.z * pB[i]);
+      T[i] *= tr;
     }
   }
   tEnd = t1;
@@ -275,57 +276,19 @@ float ridgeElevation(int k, float az) {
   return atan(ridgeHeight(k, az) - uAltitude - drop, d);
 }
 
-// Atmosphere then ground or space, plus the solar disc (shadeOpen in shade.ts).
-void shadeOpen(vec3 dir, out vec4 S[NG]) {
-  vec4 L[NG];
-  vec4 T[NG];
-  bool hitGround;
-  bool missed;
-  float tEnd;
-  traceRay(dir, -1.0, false, uSteps, L, T, hitGround, missed, tEnd);
-  for (int i = 0; i < NG; i++) S[i] = L[i];
-  if (hitGround) {
-    float r0 = uBottomR + max(uAltitude, 0.0);
-    vec3 p = vec3(dir.x * tEnd, r0 + dir.y * tEnd, dir.z * tEnd);
-    vec3 up = normalize(p);
-    vec4 G[NG];
-    surfaceRadiance(uBottomR, 0.0, up, up, G);
-    for (int i = 0; i < NG; i++) S[i] += G[i] * T[i];
-    return;
-  }
-  float sinT = length(cross(dir, uSunDir));
-  float theta = dot(dir, uSunDir) > 0.0 ? asin(min(1.0, sinT)) : PI;
-  float alpha = uSunAngR;
-  if (theta < alpha + 0.5 * uPixelAngle) {
-    float coverage = clamp((alpha - theta) / uPixelAngle + 0.5, 0.0, 1.0);
-    float x = min(theta, alpha * 0.999) / alpha;
-    float muP = sqrt(max(0.0, 1.0 - x * x));
-    for (int i = 0; i < NG; i++) {
-      vec4 a = uLdExp[i];
-      S[i] += uSolar[i] / uSunOmega * (a + 2.0) * 0.5 * pow(vec4(muP), a) * T[i] * coverage;
-    }
-  }
-}
-
-void shadeRidge(vec3 dir, int k, float t, bool onFloor, float rim, out vec4 S[NG]) {
-  vec4 L[NG];
-  vec4 T[NG];
-  bool hitGround;
-  bool missed;
-  float tEnd;
-  int steps = max(8, min(uSteps, int(floor(float(uSteps) * 0.4 + 0.5))));
-  traceRay(dir, t, true, steps, L, T, hitGround, missed, tEnd);
-  vec2 hd = -dir.xz;
-  float hl = length(hd);
-  hd = hl > 0.0 ? hd / hl : vec2(1.0, 0.0);
-  float slope = uRidge[k].z;
-  float tilt = onFloor ? PI * 0.5 : slope + rim * (PI * 0.5 - slope) * 0.6;
-  vec3 n = vec3(hd.x * cos(tilt), sin(tilt), hd.y * cos(tilt));
-  float h = max(0.0, uAltitude);
-  vec4 G[NG];
-  surfaceRadiance(uBottomR + h, h * (2.0 * uBottomR + h), vec3(0.0, 1.0, 0.0), n, G);
-  for (int i = 0; i < NG; i++) S[i] = L[i] + G[i] * T[i];
-}
+// shadeDirection (shade.ts) as a list of up to five ray jobs executed by one loop, so traceRay and
+// surfaceRadiance each have a single call site. (Inlining them at every call site made the shader
+// take over ten seconds to compile under ANGLE's Direct3D 11 backend.)
+//   kind 0: open ray (atmosphere, then ground or space, plus the solar disc)
+//   kind 1: terrain hit on ridge layer `layer` at distance tMax
+struct Job {
+  vec3 dir;
+  float tMax;
+  float weight;
+  int kind;
+  int layer;
+  float tilt;
+};
 
 void shadeDirection(vec3 dir, out vec4 Sum[NG]) {
   for (int i = 0; i < NG; i++) Sum[i] = vec4(0.0);
@@ -334,7 +297,8 @@ void shadeDirection(vec3 dir, out vec4 Sum[NG]) {
   if (az < 0.0) az += 2.0 * PI;
   float px = max(uPixelAngle, 1e-6);
   float remaining = 1.0;
-  vec4 S[NG];
+  Job jobs[5];
+  int count = 0;
 
   if (uHillWeight > 0.0) {
     float tFloor = elev < uFloorElevation ? (uFloorDepth + max(0.0, uAltitude)) / sin(-elev) : 1e9;
@@ -350,10 +314,11 @@ void shadeDirection(vec3 dir, out vec4 Sum[NG]) {
         if (rise > 0.0) tHill = min(tHill, eye / rise / max(0.05, cos(elev)));
       }
       bool onFloor = tFloor < tHill;
-      float rim = clamp(1.0 - (ridge - elev) / uRimAngle, 0.0, 1.0);
-      shadeRidge(dir, k, min(tHill, tFloor), onFloor, onFloor ? 0.0 : rim, S);
-      float w = remaining * cov;
-      for (int i = 0; i < NG; i++) Sum[i] += w * S[i];
+      float rim = onFloor ? 0.0 : clamp(1.0 - (ridge - elev) / uRimAngle, 0.0, 1.0);
+      float slope = uRidge[k].z;
+      float tilt = onFloor ? PI * 0.5 : slope + rim * (PI * 0.5 - slope) * 0.6;
+      jobs[count] = Job(dir, min(tHill, tFloor), remaining * cov, 1, k, tilt);
+      count++;
       remaining *= 1.0 - cov;
     }
   }
@@ -364,18 +329,76 @@ void shadeDirection(vec3 dir, out vec4 Sum[NG]) {
     float horizon = -atan(sqrt(h0 * (2.0 * R + h0)) / R);
     float below = clamp((horizon - elev) / px + 0.5, 0.0, 1.0);
     if (below > 0.0 && below < 1.0) {
+      // Planet limb: blend a ray just above and just below the horizon.
       float ce = cos(horizon + 0.5 * px);
       vec3 upDir = vec3(ce * sin(az), sin(horizon + 0.5 * px), ce * cos(az));
       float cd = cos(horizon - 0.5 * px);
       vec3 downDir = vec3(cd * sin(az), sin(horizon - 0.5 * px), cd * cos(az));
-      vec4 A[NG];
-      shadeOpen(upDir, A);
-      shadeOpen(downDir, S);
-      for (int i = 0; i < NG; i++) Sum[i] += remaining * ((1.0 - below) * A[i] + below * S[i]);
+      jobs[count] = Job(upDir, -1.0, remaining * (1.0 - below), 0, 0, 0.0);
+      count++;
+      jobs[count] = Job(downDir, -1.0, remaining * below, 0, 0, 0.0);
+      count++;
     } else {
-      shadeOpen(dir, S);
-      for (int i = 0; i < NG; i++) Sum[i] += remaining * S[i];
+      jobs[count] = Job(dir, -1.0, remaining, 0, 0, 0.0);
+      count++;
     }
+  }
+
+  int ridgeSteps = max(8, min(uSteps, int(floor(float(uSteps) * 0.4 + 0.5))));
+  float h = max(0.0, uAltitude);
+  for (int j = 0; j < count; j++) {
+    Job job = jobs[j];
+    bool terrain = job.kind == 1;
+    vec4 L[NG];
+    vec4 T[NG];
+    bool hitGround;
+    bool missed;
+    float tEnd;
+    traceRay(job.dir, job.tMax, terrain, terrain ? ridgeSteps : uSteps, L, T, hitGround, missed, tEnd);
+    vec4 S[NG];
+    for (int i = 0; i < NG; i++) S[i] = L[i];
+
+    // Surfaces: a hillside facing the observer, or the planet's ground.
+    bool surface = terrain || hitGround;
+    if (surface) {
+      float r;
+      float q;
+      vec3 up;
+      vec3 n;
+      if (terrain) {
+        vec2 hd = -job.dir.xz;
+        float hl = length(hd);
+        hd = hl > 0.0 ? hd / hl : vec2(1.0, 0.0);
+        n = vec3(hd.x * cos(job.tilt), sin(job.tilt), hd.y * cos(job.tilt));
+        up = vec3(0.0, 1.0, 0.0);
+        r = uBottomR + h;
+        q = h * (2.0 * uBottomR + h);
+      } else {
+        float r0 = uBottomR + h;
+        up = normalize(vec3(job.dir.x * tEnd, r0 + job.dir.y * tEnd, job.dir.z * tEnd));
+        n = up;
+        r = uBottomR;
+        q = 0.0;
+      }
+      vec4 G[NG];
+      surfaceRadiance(r, q, up, n, G);
+      for (int i = 0; i < NG; i++) S[i] += G[i] * T[i];
+    } else {
+      // Solar disc with limb darkening and anti-aliased edge.
+      float sinT = length(cross(job.dir, uSunDir));
+      float theta = dot(job.dir, uSunDir) > 0.0 ? asin(min(1.0, sinT)) : PI;
+      float alpha = uSunAngR;
+      if (theta < alpha + 0.5 * uPixelAngle) {
+        float coverage = clamp((alpha - theta) / uPixelAngle + 0.5, 0.0, 1.0);
+        float x = min(theta, alpha * 0.999) / alpha;
+        float muP = sqrt(max(0.0, 1.0 - x * x));
+        for (int i = 0; i < NG; i++) {
+          vec4 a = uLdExp[i];
+          S[i] += uSolar[i] / uSunOmega * (a + 2.0) * 0.5 * pow(vec4(muP), a) * T[i] * coverage;
+        }
+      }
+    }
+    for (int i = 0; i < NG; i++) Sum[i] += job.weight * S[i];
   }
 }
 

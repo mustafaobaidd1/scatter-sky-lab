@@ -180,7 +180,7 @@ export function traceRay(scene: Scene, dir: Vec3, opts: TraceOptions): TraceResu
     res.missed = true;
     return res;
   }
-  let t0 = ext.t0;
+  const t0 = ext.t0;
   let t1 = ext.t1;
   res.hitGround = ext.hitGround;
   if (opts.tMax !== undefined && opts.tMax < t1) {
